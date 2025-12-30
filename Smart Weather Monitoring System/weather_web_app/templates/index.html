@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- ✅ RESPONSIVE META TAG (VERY IMPORTANT) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Weather App</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom chart logic -->
+    <script src="{{ url_for('static', filename='chart.js') }}"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌤 Smart Weather App</h1>
+
+    <!-- SEARCH (MANUAL CITY) -->
+    <form method="POST" class="search-box">
+        <input type="text" name="city" placeholder="Enter city name">
+        <button type="submit">Get</button>
+    </form>
+
+    <!-- GPS BUTTON -->
+    <button 
+        onclick="getLocation()" 
+        class="gps-btn">
+        📍 Use My Location
+    </button>
+
+    <!-- ERROR -->
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <!-- CURRENT WEATHER -->
+    {% if weather %}
+        <div class="city">{{ weather.city }}</div>
+        <div class="temp">{{ weather.temp }}°C</div>
+
+        <div class="details">
+            <p>🌥 {{ weather.description }}</p>
+            <p>💧 {{ weather.humidity }}%</p>
+            <p>🌬 {{ weather.wind }} m/s</p>
+            <p>⏲ {{ weather.pressure }} hPa</p>
+        </div>
+    {% endif %}
+
+    <!-- 7 DAY FORECAST -->
+    {% if forecast %}
+        <hr>
+
+        <h3>📅 7 Day Forecast</h3>
+
+        <div class="forecast">
+            {% for day in forecast %}
+                <div class="day-card">
+                    <b>{{ day.date }}</b><br>
+                    {{ day.temp }}°C
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- TEMPERATURE GRAPH -->
+        <canvas id="tempChart"></canvas>
+
+        <script>
+            const days = [
+                {% for day in forecast %}
+                    "{{ day.date }}",
+                {% endfor %}
+            ];
+
+            const temps = [
+                {% for day in forecast %}
+                    {{ day.temp }},
+                {% endfor %}
+            ];
+
+            drawTemperatureChart(days, temps);
+        </script>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <div class="footer">
+        Developed with ❤️ by <b>Aman Kumar</b>
+    </div>
+</div>
+
+<!-- ================= GPS SCRIPT ================= -->
+<script>
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(sendLocation, showError);
+    } else {
+        alert("Geolocation not supported");
+    }
+}
+
+function sendLocation(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/";
+
+    const latInput = document.createElement("input");
+    latInput.type = "hidden";
+    latInput.name = "lat";
+    latInput.value = lat;
+
+    const lonInput = document.createElement("input");
+    lonInput.type = "hidden";
+    lonInput.name = "lon";
+    lonInput.value = lon;
+
+    form.appendChild(latInput);
+    form.appendChild(lonInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function showError() {
+    alert("Location permission denied");
+}
+</script>
+
+</body>
+</html>
